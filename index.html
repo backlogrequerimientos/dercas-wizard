@@ -342,7 +342,7 @@
   }
   #wizardWrapper {
     width: 100%; display: flex; flex-direction: column; align-items: center;
-    padding: 0 16px 64px;
+    padding: 0 24px 64px;
   }
 
   /* ── Mis solicitudes ── */
@@ -355,7 +355,7 @@
   }
   #btnMisSolicitudes:hover { background: #d0e4ff; }
   #panelSolicitudes {
-    width: 100%; max-width: 860px;
+    width: 100%; max-width: 1200px;
   }
   .panel-header {
     display: flex; align-items: center; gap: 12px;
@@ -1147,7 +1147,7 @@ function renderTabla(items) {
       <td>${esc(r.sistema)}</td>
       <td>${esc(tipoMap[r.tipo] || r.tipo)}</td>
       <td>${esc(r.urgencia)}</td>
-      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.problema)}</td>
+      <td style="max-width:360px">${esc(r.problema)}</td>
       <td>${trelloCell}</td>
     </tr>`;
   }).join('');
