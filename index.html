@@ -355,7 +355,13 @@
   }
   #btnMisSolicitudes:hover { background: #d0e4ff; }
   #panelSolicitudes {
-    width: 100%; max-width: 1200px;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 8px;
+  }
+  #panelSolicitudes .card {
+    max-width: 100%;
+    width: 100%;
   }
   .panel-header {
     display: flex; align-items: center; gap: 12px;
@@ -1092,6 +1098,7 @@ function verMisSolicitudes() {
   document.getElementById('progressBar').classList.add('hidden');
   document.getElementById('panelSolicitudes').classList.remove('hidden');
   document.getElementById('panelEmailLabel').textContent = verifiedEmail || '';
+  document.getElementById('wizardWrapper').style.alignItems = 'stretch';
   cargarMisSolicitudes();
 }
 
@@ -1099,6 +1106,7 @@ function volverAlFormulario() {
   document.getElementById('panelSolicitudes').classList.add('hidden');
   document.getElementById('progressBar').classList.remove('hidden');
   document.getElementById('step' + currentStep).classList.remove('hidden');
+  document.getElementById('wizardWrapper').style.alignItems = 'center';
 }
 
 async function cargarMisSolicitudes() {
