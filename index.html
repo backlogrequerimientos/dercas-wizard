@@ -665,6 +665,7 @@
     <h2>¡Solicitud enviada!</h2>
     <p>Tu requerimiento fue registrado. El gestor lo revisara y lo asignara al equipo tecnico.<br>Te avisaran cuando este en proceso.</p>
     <button class="btn btn-secondary" onclick="resetForm()" style="margin-top:16px">Nueva solicitud</button>
+    <button class="btn btn-secondary" onclick="cerrarSesion()" style="margin-top:8px;background:#fff;color:var(--muted);border:2px solid var(--border)">Cerrar y salir</button>
   </div>
 </div>
 
@@ -1013,6 +1014,17 @@ async function submitCard() {
   }
 }
 
+
+function cerrarSesion() {
+  verifiedEmail = null;
+  otpState = null;
+  resetForm();
+  document.getElementById('wizardWrapper').classList.add('hidden');
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginEmail').value = '';
+  showLoginStepA();
+  window.scrollTo({ top: 0 });
+}
 
 function resetForm() {
   document.getElementById('stepDone').classList.add('hidden');
