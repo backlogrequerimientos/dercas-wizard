@@ -1,0 +1,1050 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitud de Cambio — Veris</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:    #0052CC;
+    --blue-dk: #003884;
+    --blue-lt: #E9F2FF;
+    --teal:    #00B8D9;
+    --bg:      #F4F5F7;
+    --card:    #FFFFFF;
+    --text:    #172B4D;
+    --muted:   #6B778C;
+    --border:  #DFE1E6;
+    --green:   #36B37E;
+    --yellow:  #FFAB00;
+    --red:     #DE350B;
+    --radius:  8px;
+    --shadow:  0 2px 12px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 64px;
+  }
+
+  /* Header */
+  .app-header {
+    width: 100%;
+    max-width: 680px;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .logo {
+    width: 40px; height: 40px;
+    background: var(--blue);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 18px; letter-spacing: -1px;
+    flex-shrink: 0;
+  }
+  .app-header h1 { font-size: 20px; font-weight: 700; }
+  .app-header p  { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+  /* Progress */
+  .progress-bar {
+    width: 100%; max-width: 680px;
+    display: flex; gap: 8px;
+    margin-bottom: 24px;
+  }
+  .progress-step {
+    flex: 1; height: 4px; border-radius: 2px;
+    background: var(--border);
+    transition: background .3s;
+  }
+  .progress-step.done  { background: var(--green); }
+  .progress-step.active{ background: var(--blue); }
+
+  .step-label {
+    width: 100%; max-width: 680px;
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 20px;
+    display: flex; justify-content: space-between;
+  }
+
+  /* Card */
+  .card {
+    width: 100%; max-width: 680px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+  }
+  .card-title {
+    font-size: 18px; font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .card-sub {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 28px; line-height: 1.5;
+  }
+
+  /* Form */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 6px; color: var(--text);
+  }
+  .field .hint {
+    font-size: 12px; color: var(--muted);
+    margin-bottom: 6px; line-height: 1.4;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    background: #fff;
+    transition: border-color .2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--blue);
+  }
+  .field textarea { resize: vertical; min-height: 90px; }
+  .field.error input, .field.error select, .field.error textarea {
+    border-color: var(--red);
+  }
+  .field .err-msg {
+    font-size: 12px; color: var(--red);
+    margin-top: 4px; display: none;
+  }
+  .field.error .err-msg { display: block; }
+
+  /* Radio group */
+  .radio-group { display: flex; gap: 10px; flex-wrap: wrap; }
+  .radio-option {
+    flex: 1; min-width: 100px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 14px;
+  }
+  .radio-option input[type=radio] { display: none; }
+  .radio-option.selected {
+    border-color: var(--blue);
+    background: var(--blue-lt);
+    color: var(--blue);
+    font-weight: 600;
+  }
+  .radio-dot {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-radius: 50%; flex-shrink: 0;
+    transition: border-color .2s, background .2s;
+  }
+  .radio-option.selected .radio-dot {
+    border-color: var(--blue);
+    background: var(--blue);
+  }
+
+  /* Navigation buttons */
+  .nav { display: flex; justify-content: space-between; margin-top: 32px; gap: 12px; }
+  .btn {
+    padding: 10px 24px;
+    border-radius: var(--radius);
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; border: none;
+    transition: background .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: var(--blue); color: #fff; }
+  .btn-primary:hover { background: var(--blue-dk); }
+  .btn-secondary {
+    background: transparent; color: var(--muted);
+    border: 2px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--muted); color: var(--text); }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #2a9165; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* Preview */
+  .preview-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    font-size: 13px; line-height: 1.7;
+    max-height: 340px; overflow-y: auto;
+    white-space: pre-wrap;
+    font-family: "Segoe UI", sans-serif;
+    margin-bottom: 24px;
+  }
+  .preview-box h3 {
+    font-size: 15px; font-weight: 700; margin-bottom: 4px;
+  }
+  .preview-section { margin-bottom: 14px; }
+  .preview-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--muted); margin-bottom: 4px;
+  }
+  .preview-value { color: var(--text); }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .4px;
+  }
+  .badge-bug     { background: #FFEBE6; color: var(--red); }
+  .badge-mejora  { background: #E3FCEF; color: #006644; }
+  .badge-nuevo   { background: var(--blue-lt); color: var(--blue); }
+  .badge-alta    { background: #FFEBE6; color: var(--red); }
+  .badge-media   { background: #FFF7D6; color: #974F0C; }
+  .badge-baja    { background: #E3FCEF; color: #006644; }
+
+  /* Board selector */
+  .board-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px; margin-bottom: 16px;
+  }
+  .board-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    font-size: 13px; font-weight: 600;
+  }
+  .board-card:hover { border-color: var(--blue); background: var(--blue-lt); }
+  .board-card.selected { border-color: var(--blue); background: var(--blue-lt); color: var(--blue); }
+  .board-card .board-icon { font-size: 20px; margin-bottom: 6px; }
+
+  .list-selector {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .list-btn {
+    padding: 7px 14px;
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    font-size: 13px; cursor: pointer;
+    background: #fff; color: var(--text);
+    transition: border-color .2s, background .2s;
+  }
+  .list-btn:hover   { border-color: var(--blue); color: var(--blue); }
+  .list-btn.selected{ border-color: var(--blue); background: var(--blue); color: #fff; }
+
+  /* Success */
+  .success-box {
+    text-align: center; padding: 24px 0 8px;
+  }
+  .success-icon {
+    width: 64px; height: 64px;
+    background: #E3FCEF;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; margin: 0 auto 16px;
+  }
+  .success-box h2 { font-size: 20px; margin-bottom: 8px; }
+  .success-box p  { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+  .card-url {
+    display: inline-block;
+    background: var(--blue-lt);
+    color: var(--blue);
+    font-weight: 600; font-size: 13px;
+    padding: 8px 16px; border-radius: var(--radius);
+    text-decoration: none;
+  }
+  .card-url:hover { background: var(--blue); color: #fff; }
+
+  /* Loading */
+  .loading {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--muted); font-size: 13px;
+    padding: 12px 0;
+  }
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 520px) {
+    .card { padding: 20px; }
+    .radio-group { flex-direction: column; }
+  }
+
+  /* ── Login / OTP ── */
+  .login-screen {
+    width: 100%; max-width: 440px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 36px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+  }
+  .login-logo {
+    width: 56px; height: 56px;
+    background: var(--blue);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 26px;
+    margin-bottom: 20px;
+  }
+  .login-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .login-sub   { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+  .login-sent  { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
+  #loginStepA, #loginStepB { width: 100%; text-align: left; }
+  .otp-row {
+    display: flex; gap: 10px; justify-content: center;
+    margin: 8px 0 0;
+  }
+  .otp-box {
+    width: 48px; height: 56px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 24px; font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    background: #fff;
+    outline: none;
+    transition: border-color .2s, background .2s;
+  }
+  .otp-box:focus  { border-color: var(--blue); }
+  .otp-box.filled { border-color: var(--blue); background: var(--blue-lt); }
+  .otp-box.otp-err{ border-color: var(--red);  background: #FFEBE6; }
+  .otp-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 18px; }
+  .login-resend { font-size: 12px; color: var(--muted); margin-top: 16px; text-align: center; }
+  .login-resend a { color: var(--blue); text-decoration: none; }
+  .login-resend a:hover { text-decoration: underline; }
+  #loginScreen {
+    width: 100%; display: flex; flex-direction: column;
+    align-items: center; padding: 32px 16px 64px;
+  }
+  #wizardWrapper {
+    width: 100%; display: flex; flex-direction: column; align-items: center;
+    padding: 0 16px 64px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Pantalla de acceso OTP ── -->
+<div id="loginScreen">
+  <div class="login-screen">
+    <div class="login-logo">V</div>
+    <div class="login-title">Solicitud de Cambio</div>
+    <p class="login-sub">Ingresa con tu correo corporativo<br>para acceder al formulario</p>
+
+    <div id="loginStepA">
+      <div class="field" id="f-loginEmail">
+        <label>Correo corporativo <span style="color:var(--red)">*</span></label>
+        <input type="email" id="loginEmail" placeholder="nombre@veris.com.ec" autocomplete="email"
+               onkeydown="if(event.key==='Enter')sendOtp()">
+        <div class="err-msg">Ingresa un correo @veris.com.ec válido</div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="sendOtp()" id="btnSendOtp">
+        Enviar código de verificación
+      </button>
+    </div>
+
+    <div id="loginStepB" class="hidden">
+      <p class="login-sent">Enviamos un código de 6 dígitos a<br><strong id="loginEmailMask"></strong></p>
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">Código de verificación</div>
+      <div class="otp-row" id="otpRow">
+        <input class="otp-box" id="otp0" maxlength="1" type="text" inputmode="numeric" autocomplete="one-time-code">
+        <input class="otp-box" id="otp1" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-box" id="otp2" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-box" id="otp3" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-box" id="otp4" maxlength="1" type="text" inputmode="numeric">
+        <input class="otp-box" id="otp5" maxlength="1" type="text" inputmode="numeric">
+      </div>
+      <div id="otpError" class="otp-error"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="verifyOtp()" id="btnVerifyOtp">
+        Verificar
+      </button>
+      <button class="btn btn-secondary" style="width:100%;margin-top:8px" onclick="showLoginStepA()">
+        ← Cambiar correo
+      </button>
+      <p class="login-resend">¿No llegó el código? <a href="#" onclick="resendOtp();return false">Reenviar</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Wizard (oculto hasta autenticarse) ── -->
+<div id="wizardWrapper" class="hidden">
+
+<div class="app-header">
+  <div class="logo">V</div>
+  <div>
+    <h1>Solicitud de Cambio</h1>
+    <p>Completa el formulario para registrar tu requerimiento</p>
+  </div>
+</div>
+
+<div class="progress-bar" id="progressBar">
+  <div class="progress-step active" id="ps1"></div>
+  <div class="progress-step" id="ps2"></div>
+  <div class="progress-step" id="ps3"></div>
+  <div class="progress-step" id="ps4"></div>
+  <div class="progress-step" id="ps5"></div>
+</div>
+<div class="step-label">
+  <span>Identificacion</span>
+  <span>Situacion actual</span>
+  <span>Que necesito</span>
+  <span>Prioridad</span>
+  <span>Confirmar</span>
+</div>
+
+<div class="card" id="step1">
+  <div class="card-title">Cuéntanos quién eres</div>
+  <div class="card-sub">Esta informacion ayuda al equipo tecnico a contactarte y priorizar tu solicitud.</div>
+
+  <div class="field" id="f-nombre">
+    <label>Tu nombre completo <span style="color:var(--red)">*</span></label>
+    <input type="text" id="nombre" placeholder="Ej. Maria Perez">
+    <div class="err-msg">Ingresa tu nombre</div>
+  </div>
+
+  <div class="field" id="f-area">
+    <label>Area o equipo <span style="color:var(--red)">*</span></label>
+    <select id="area">
+      <option value="">Selecciona tu area...</option>
+      <option>Facturacion / Cajas</option>
+      <option>Agendamiento</option>
+      <option>Historia Clinica</option>
+      <option>Laboratorio</option>
+      <option>Comercial / Convenios</option>
+      <option>Financiero / Contabilidad</option>
+      <option>Backoffice / Administrativo</option>
+      <option>Gerencia</option>
+      <option>Otro</option>
+    </select>
+    <div class="err-msg">Selecciona tu area</div>
+  </div>
+
+  <div class="field" id="f-sistema">
+    <label>Sistema o modulo afectado <span style="color:var(--red)">*</span></label>
+    <select id="sistema">
+      <option value="">Selecciona el sistema...</option>
+      <option>Facturacion electronica</option>
+      <option>Agendamiento de citas</option>
+      <option>Historia clinica</option>
+      <option>Laboratorio domicilio</option>
+      <option>Convenios / Contratos</option>
+      <option>Reportes / Estadisticas</option>
+      <option>Caja / Cobros</option>
+      <option>Inventario / Bodega</option>
+      <option>Integraciones (AX / IESS)</option>
+      <option>Portal del paciente</option>
+      <option>Otro / No se</option>
+    </select>
+    <div class="err-msg">Selecciona el sistema</div>
+  </div>
+
+  <div class="nav">
+    <span></span>
+    <button class="btn btn-primary" onclick="goTo(2)">Siguiente &rarr;</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step2">
+  <div class="card-title">¿Qué está pasando hoy?</div>
+  <div class="card-sub">Describe la situacion actual. Cuanto mas detalle des, mejor podremos entender y resolver tu solicitud.</div>
+
+  <div class="field" id="f-problema">
+    <label>Describe el problema o la necesidad <span style="color:var(--red)">*</span></label>
+    <div class="hint">¿Qué ocurre actualmente? ¿Qué no funciona o qué hace falta? Se concreto.</div>
+    <textarea id="problema" placeholder="Ej. Al generar una factura con descuento del 100%, el sistema muestra un error y no permite guardar. Esto ocurre solo cuando el convenio tiene cobertura total."></textarea>
+    <div class="err-msg">Describe el problema con al menos 20 caracteres</div>
+  </div>
+
+  <div class="field" id="f-frecuencia">
+    <label>¿Con qué frecuencia ocurre?</label>
+    <div class="radio-group" id="rg-frecuencia">
+      <label class="radio-option" onclick="selectRadio('frecuencia','siempre',this)">
+        <input type="radio" name="frecuencia" value="siempre">
+        <div class="radio-dot"></div> Siempre
+      </label>
+      <label class="radio-option" onclick="selectRadio('frecuencia','aveces',this)">
+        <input type="radio" name="frecuencia" value="aveces">
+        <div class="radio-dot"></div> A veces
+      </label>
+      <label class="radio-option" onclick="selectRadio('frecuencia','raro',this)">
+        <input type="radio" name="frecuencia" value="raro">
+        <div class="radio-dot"></div> Raramente
+      </label>
+      <label class="radio-option" onclick="selectRadio('frecuencia','nuevo',this)">
+        <input type="radio" name="frecuencia" value="nuevo">
+        <div class="radio-dot"></div> Es nuevo
+      </label>
+    </div>
+  </div>
+
+  <div class="field" id="f-afectados">
+    <label>¿A quiénes afecta? <span style="color:var(--red)">*</span></label>
+    <div class="hint">Usuarios, pacientes, procesos o areas que se ven impactados.</div>
+    <input type="text" id="afectados" placeholder="Ej. Personal de caja y facturacion de todas las sucursales">
+    <div class="err-msg">Indica a quienes afecta</div>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-secondary" onclick="goTo(1)">&larr; Atras</button>
+    <button class="btn btn-primary" onclick="goTo(3)">Siguiente &rarr;</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step3">
+  <div class="card-title">¿Qué necesitas que cambie?</div>
+  <div class="card-sub">Describe la solucion que esperas y como sabrás que el cambio fue exitoso.</div>
+
+  <div class="field" id="f-solucion">
+    <label>¿Qué necesitas que haga el sistema? <span style="color:var(--red)">*</span></label>
+    <div class="hint">Describe el comportamiento esperado después del cambio.</div>
+    <textarea id="solucion" placeholder="Ej. El sistema debe permitir guardar facturas con descuento del 100% cuando el convenio tiene cobertura total, generando correctamente el documento electronico con valor cero."></textarea>
+    <div class="err-msg">Describe la solucion esperada con al menos 20 caracteres</div>
+  </div>
+
+  <div class="field" id="f-criterios">
+    <label>¿Cómo sabrías que esta resuelto?</label>
+    <div class="hint">Lista las condiciones o pruebas que confirman que el cambio funciona correctamente. Una por linea.</div>
+    <textarea id="criterios" style="min-height:100px" placeholder="Ej.&#10;- Puedo guardar una factura con descuento 100% sin errores&#10;- El documento electronico se genera con valor 0.00&#10;- El reporte de facturacion muestra correctamente el registro"></textarea>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-secondary" onclick="goTo(2)">&larr; Atras</button>
+    <button class="btn btn-primary" onclick="goTo(4)">Siguiente &rarr;</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step4">
+  <div class="card-title">Prioridad y tipo</div>
+  <div class="card-sub">Ayudanos a entender la urgencia y la naturaleza del cambio.</div>
+
+  <div class="field">
+    <label>Tipo de solicitud <span style="color:var(--red)">*</span></label>
+    <div class="radio-group" id="rg-tipo">
+      <label class="radio-option" onclick="selectRadio('tipo','bug',this)">
+        <input type="radio" name="tipo" value="bug">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700">Error / Bug</div>
+          <div style="font-size:11px;color:var(--muted)">Algo no funciona</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio('tipo','mejora',this)">
+        <input type="radio" name="tipo" value="mejora">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700">Mejora</div>
+          <div style="font-size:11px;color:var(--muted)">Mejorar algo existente</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio('tipo','nuevo',this)">
+        <input type="radio" name="tipo" value="nuevo">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700">Nuevo</div>
+          <div style="font-size:11px;color:var(--muted)">Funcionalidad nueva</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Urgencia <span style="color:var(--red)">*</span></label>
+    <div class="radio-group" id="rg-urgencia">
+      <label class="radio-option" onclick="selectRadio('urgencia','alta',this)">
+        <input type="radio" name="urgencia" value="alta">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700;color:var(--red)">Alta</div>
+          <div style="font-size:11px;color:var(--muted)">Bloquea operaciones</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio('urgencia','media',this)">
+        <input type="radio" name="urgencia" value="media">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700;color:#974F0C">Media</div>
+          <div style="font-size:11px;color:var(--muted)">Afecta pero no bloquea</div>
+        </div>
+      </label>
+      <label class="radio-option" onclick="selectRadio('urgencia','baja',this)">
+        <input type="radio" name="urgencia" value="baja">
+        <div class="radio-dot"></div>
+        <div>
+          <div style="font-weight:700;color:#006644">Baja</div>
+          <div style="font-size:11px;color:var(--muted)">Mejora sin urgencia</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <div class="field" id="f-observaciones">
+    <label>Observaciones adicionales</label>
+    <div class="hint">Informacion extra: capturas, ejemplos, fechas limite, personas de contacto, etc.</div>
+    <textarea id="observaciones" style="min-height:70px" placeholder="Opcional — cualquier detalle que ayude al equipo tecnico..."></textarea>
+  </div>
+
+  <div class="nav">
+    <button class="btn btn-secondary" onclick="goTo(3)">&larr; Atras</button>
+    <button class="btn btn-primary" onclick="buildPreview()">Ver resumen &rarr;</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step5">
+  <div class="card-title">Revisa y envia tu solicitud</div>
+  <div class="card-sub">Verifica que todo este correcto antes de enviar.</div>
+
+  <div class="preview-box" id="previewBox"></div>
+
+  <!-- Clasificacion automatica -->
+  <div id="clasificacionBox" style="border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+    <div id="clasificacionIcono" style="font-size:28px;flex-shrink:0"></div>
+    <div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;opacity:.7" id="clasificacionEtiqueta"></div>
+      <div style="font-size:15px;font-weight:700" id="clasificacionNivel"></div>
+      <div style="font-size:12px;margin-top:2px;opacity:.8" id="clasificacionDesc"></div>
+    </div>
+  </div>
+
+  <!-- Campos extra solo para Mayor -->
+  <div id="camposMayor" class="hidden">
+    <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--text)">Informacion adicional requerida para cambios mayores</div>
+    <div class="field">
+      <label>Otros sistemas que podrian verse afectados</label>
+      <div class="hint">Lista los modulos o integraciones que podrian impactarse indirectamente.</div>
+      <textarea id="sistemasDep" style="min-height:70px" placeholder="Ej. Integracion con AX, modulo de reportes, portal del paciente..."></textarea>
+    </div>
+    <div class="field">
+      <label>Fecha limite requerida</label>
+      <div class="hint">Si hay una fecha critica para este cambio, indicala.</div>
+      <input type="date" id="fechaLimite">
+    </div>
+    <div class="field">
+      <label>Usuarios aproximadamente afectados</label>
+      <input type="number" id="usuariosAfectados" placeholder="Ej. 50" min="1">
+    </div>
+  </div>
+
+  <div style="background:var(--blue-lt);border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;font-size:13px;color:var(--blue);display:flex;gap:10px;align-items:flex-start">
+    <span style="font-size:16px;flex-shrink:0">&#8505;</span>
+    <span>Tu solicitud sera revisada por el gestor.</span>
+  </div>
+
+  <div class="nav" style="margin-top:8px">
+    <button class="btn btn-secondary" onclick="goTo(4)">&larr; Editar</button>
+    <button class="btn btn-success" id="btnEnviar" onclick="submitCard()">&#10003; Enviar solicitud</button>
+  </div>
+</div>
+
+<div class="card hidden" id="stepDone">
+  <div class="success-box">
+    <div class="success-icon">✓</div>
+    <h2>¡Solicitud enviada!</h2>
+    <p>Tu requerimiento fue registrado. El gestor lo revisara y lo asignara al equipo tecnico.<br>Te avisaran cuando este en proceso.</p>
+    <button class="btn btn-secondary" onclick="resetForm()" style="margin-top:16px">Nueva solicitud</button>
+  </div>
+</div>
+
+</div><!-- /wizardWrapper -->
+
+<script>
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbymIJomAxkx-O0uGn1e8FE-AczJAj9q7Cad_oeGrCGziQsPSwh_oq5SVO53yiOnb-PK/exec";
+
+/* ── OTP / Login ── */
+let verifiedEmail = null;
+
+function maskEmail(email) {
+  const [local, domain] = email.split('@');
+  const m = local.length <= 2
+    ? local[0] + '***'
+    : local.substring(0, 2) + '***' + local[local.length - 1];
+  return m + '@' + domain;
+}
+
+function showLoginStepA() {
+  document.getElementById('loginStepB').classList.add('hidden');
+  document.getElementById('loginStepA').classList.remove('hidden');
+  const btn = document.getElementById('btnSendOtp');
+  btn.disabled = false;
+  btn.textContent = 'Enviar código de verificación';
+  clearOtpBoxes();
+}
+
+function clearOtpBoxes() {
+  for (let i = 0; i < 6; i++) {
+    const b = document.getElementById('otp' + i);
+    b.value = '';
+    b.classList.remove('filled', 'otp-err');
+  }
+  document.getElementById('otpError').textContent = '';
+}
+
+function updateOtpBoxStyles() {
+  for (let i = 0; i < 6; i++) {
+    const b = document.getElementById('otp' + i);
+    b.classList.toggle('filled', b.value.length > 0);
+    b.classList.remove('otp-err');
+  }
+  document.getElementById('otpError').textContent = '';
+}
+
+function showOtpError(msg) {
+  document.getElementById('otpError').textContent = msg;
+  document.querySelectorAll('.otp-box').forEach(b => b.classList.add('otp-err'));
+}
+
+function initOtpInputs() {
+  for (let i = 0; i < 6; i++) {
+    const box = document.getElementById('otp' + i);
+    box.addEventListener('input', e => {
+      const v = e.target.value.replace(/\D/g, '');
+      e.target.value = v ? v[0] : '';
+      if (v && i < 5) document.getElementById('otp' + (i + 1)).focus();
+      updateOtpBoxStyles();
+    });
+    box.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !e.target.value && i > 0) {
+        document.getElementById('otp' + (i - 1)).focus();
+      }
+      if (e.key === 'Enter') verifyOtp();
+    });
+    box.addEventListener('paste', e => {
+      const text = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+      if (text.length >= 6) {
+        e.preventDefault();
+        for (let j = 0; j < 6; j++) {
+          const b = document.getElementById('otp' + j);
+          b.value = text[j] || '';
+        }
+        updateOtpBoxStyles();
+        document.getElementById('otp5').focus();
+      }
+    });
+  }
+}
+
+async function sendOtp() {
+  const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
+  const fld   = document.getElementById('f-loginEmail');
+  if (!email || !email.endsWith('@veris.com.ec')) {
+    fld.classList.add('error');
+    return;
+  }
+  fld.classList.remove('error');
+  const btn = document.getElementById('btnSendOtp');
+  btn.disabled    = true;
+  btn.textContent = 'Enviando...';
+  try {
+    const res  = await fetch(SHEETS_URL + '?action=sendOtp&email=' + encodeURIComponent(email));
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById('loginEmailMask').textContent = maskEmail(email);
+      document.getElementById('loginStepA').classList.add('hidden');
+      document.getElementById('loginStepB').classList.remove('hidden');
+      clearOtpBoxes();
+      setTimeout(() => document.getElementById('otp0').focus(), 100);
+    } else {
+      alert(data.msg || 'Error al enviar el código. Intenta de nuevo.');
+      btn.disabled    = false;
+      btn.textContent = 'Enviar código de verificación';
+    }
+  } catch (e) {
+    alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    btn.disabled    = false;
+    btn.textContent = 'Enviar código de verificación';
+  }
+}
+
+async function resendOtp() {
+  showLoginStepA();
+  document.getElementById('loginStepA').classList.add('hidden');
+  document.getElementById('loginStepB').classList.remove('hidden');
+  const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
+  const btn   = document.getElementById('btnSendOtp');
+  btn.disabled    = true;
+  btn.textContent = 'Reenviando...';
+  try {
+    const res  = await fetch(SHEETS_URL + '?action=sendOtp&email=' + encodeURIComponent(email));
+    const data = await res.json();
+    if (data.ok) {
+      clearOtpBoxes();
+      document.getElementById('otpError').textContent = '';
+      setTimeout(() => document.getElementById('otp0').focus(), 100);
+    } else {
+      alert(data.msg || 'No se pudo reenviar el código.');
+    }
+    btn.disabled    = false;
+    btn.textContent = 'Enviar código de verificación';
+  } catch (e) {
+    alert('Error de conexión.');
+    btn.disabled    = false;
+    btn.textContent = 'Enviar código de verificación';
+  }
+}
+
+async function verifyOtp() {
+  const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
+  const code  = Array.from({length: 6}, (_, i) => document.getElementById('otp' + i).value).join('');
+  if (code.length < 6 || code.includes('')) {
+    showOtpError('Ingresa los 6 dígitos del código');
+    return;
+  }
+  const btn = document.getElementById('btnVerifyOtp');
+  btn.disabled    = true;
+  btn.textContent = 'Verificando...';
+  try {
+    const res  = await fetch(SHEETS_URL + '?action=verifyOtp&email=' + encodeURIComponent(email) + '&code=' + code);
+    const data = await res.json();
+    if (data.ok) {
+      verifiedEmail = email;
+      unlockWizard(email);
+    } else {
+      showOtpError(data.msg || 'Código incorrecto. Intenta de nuevo.');
+      btn.disabled    = false;
+      btn.textContent = 'Verificar';
+    }
+  } catch (e) {
+    showOtpError('Error de conexión. Intenta de nuevo.');
+    btn.disabled    = false;
+    btn.textContent = 'Verificar';
+  }
+}
+
+function unlockWizard(email) {
+  document.getElementById('loginScreen').style.display = 'none';
+  const ww = document.getElementById('wizardWrapper');
+  ww.classList.remove('hidden');
+  ww.style.display = 'flex';
+  window.scrollTo({ top: 0 });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initOtpInputs();
+});
+/* ── fin OTP ── */
+
+let currentStep = 1;
+const radios = { frecuencia: null, tipo: null, urgencia: null };
+
+function selectRadio(group, val, el) {
+  radios[group] = val;
+  document.querySelectorAll(`#rg-${group} .radio-option`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function val(id) {
+  return (document.getElementById(id)?.value || '').trim();
+}
+
+function setError(fieldId, show) {
+  const f = document.getElementById('f-' + fieldId);
+  if (f) f.classList.toggle('error', show);
+}
+
+function goTo(step) {
+  if (step > currentStep && !validate(currentStep)) return;
+  document.getElementById('step' + currentStep).classList.add('hidden');
+  currentStep = step;
+  document.getElementById('step' + currentStep).classList.remove('hidden');
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validate(step) {
+  let ok = true;
+  if (step === 1) {
+    if (!val('nombre'))  { setError('nombre', true);  ok = false; } else setError('nombre', false);
+    if (!val('area'))    { setError('area', true);    ok = false; } else setError('area', false);
+    if (!val('sistema')) { setError('sistema', true); ok = false; } else setError('sistema', false);
+  }
+  if (step === 2) {
+    if (val('problema').length < 20) { setError('problema', true);   ok = false; } else setError('problema', false);
+    if (!val('afectados'))           { setError('afectados', true);  ok = false; } else setError('afectados', false);
+  }
+  if (step === 3) {
+    if (val('solucion').length < 20) { setError('solucion', true); ok = false; } else setError('solucion', false);
+  }
+  return ok;
+}
+
+function updateProgress() {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('ps' + i);
+    if (i < currentStep)       el.className = 'progress-step done';
+    else if (i === currentStep) el.className = 'progress-step active';
+    else                        el.className = 'progress-step';
+  }
+}
+
+function calcularMagnitud() {
+  let score = 0;
+  if (radios.urgencia === 'alta')  score += 3;
+  else if (radios.urgencia === 'media') score += 2;
+  else if (radios.urgencia === 'baja')  score += 1;
+  if (radios.tipo === 'nuevo')   score += 3;
+  else if (radios.tipo === 'mejora') score += 2;
+  else if (radios.tipo === 'bug')    score += 1;
+  if (radios.frecuencia === 'siempre') score += 2;
+  else if (radios.frecuencia)          score += 1;
+  const af = val('afectados').toLowerCase();
+  if (af.includes(' y ') || af.includes(',') || af.includes('todas') || af.includes('todos')) score += 2;
+  else if (af.length > 0) score += 1;
+  if (score <= 5)  return { nivel: 'menor', score, label: 'Cambio Menor',  desc: 'Va directo al equipo tecnico.',                       color: '#E3FCEF', textColor: '#006644', icono: '🟢' };
+  if (score <= 8)  return { nivel: 'medio', score, label: 'Cambio Medio',  desc: 'Requiere revision del gestor antes de asignar.',       color: '#FFF7D6', textColor: '#974F0C', icono: '🟡' };
+  return             { nivel: 'mayor', score, label: 'Cambio Mayor',  desc: 'Requiere DERCAS completo y validacion del arquitecto.', color: '#FFEBE6', textColor: '#DE350B', icono: '🔴' };
+}
+
+function buildPreview() {
+  if (!radios.tipo) { alert('Selecciona el tipo de solicitud'); return; }
+  if (!radios.urgencia) { alert('Selecciona la urgencia'); return; }
+  if (!validate(4)) return;
+
+  const criteriosRaw = val('criterios');
+  const criteriosList = criteriosRaw
+    ? criteriosRaw.split('\n')
+        .map(l => l.replace(/^[-*]\s*/, '').trim())
+        .filter(l => l)
+        .map(l => '- ' + l)
+        .join('\n')
+    : '- Por definir con el equipo tecnico';
+
+  const tipoMap    = { bug: 'Error / Bug', mejora: 'Mejora', nuevo: 'Nuevo requerimiento' };
+  const urgenciaMap = { alta: 'Alta', media: 'Media', baja: 'Baja' };
+
+  const box = document.getElementById('previewBox');
+  box.innerHTML = `
+    <div class="preview-section">
+      <div class="preview-label">Solicitante</div>
+      <div class="preview-value">${esc(val('nombre'))} &mdash; ${esc(val('area'))}</div>
+    </div>
+    <div class="preview-section">
+      <div class="preview-label">Sistema / Modulo</div>
+      <div class="preview-value">${esc(val('sistema'))}</div>
+    </div>
+    <div class="preview-section">
+      <div class="preview-label">Tipo</div>
+      <span class="badge badge-${radios.tipo}">${tipoMap[radios.tipo]}</span>
+      &nbsp;
+      <span class="badge badge-${radios.urgencia}">Urgencia ${urgenciaMap[radios.urgencia]}</span>
+    </div>
+    <div class="preview-section">
+      <div class="preview-label">Situacion actual</div>
+      <div class="preview-value">${esc(val('problema'))}</div>
+      ${radios.frecuencia ? '<div style="font-size:12px;color:var(--muted);margin-top:4px">Frecuencia: ' + esc(radios.frecuencia) + ' &mdash; Afecta: ' + esc(val('afectados')) + '</div>' : ''}
+    </div>
+    <div class="preview-section">
+      <div class="preview-label">Solucion esperada</div>
+      <div class="preview-value">${esc(val('solucion'))}</div>
+    </div>
+    <div class="preview-section">
+      <div class="preview-label">Criterios de aceptacion</div>
+      <div class="preview-value" style="white-space:pre-line">${esc(criteriosList)}</div>
+    </div>
+    ${val('observaciones') ? '<div class="preview-section"><div class="preview-label">Observaciones</div><div class="preview-value">' + esc(val('observaciones')) + '</div></div>' : ''}
+  `;
+
+  // Mostrar clasificacion
+  const m = calcularMagnitud();
+  const cBox = document.getElementById('clasificacionBox');
+  cBox.style.background  = m.color;
+  cBox.style.color       = m.textColor;
+  document.getElementById('clasificacionIcono').textContent  = m.icono;
+  document.getElementById('clasificacionEtiqueta').textContent = 'Clasificacion automatica — ' + m.score + ' pts';
+  document.getElementById('clasificacionNivel').textContent  = m.label;
+  document.getElementById('clasificacionDesc').textContent   = m.desc;
+
+  // Mostrar campos extra solo si es Mayor
+  document.getElementById('camposMayor').classList.toggle('hidden', m.nivel !== 'mayor');
+
+  goTo(5);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function submitCard() {
+  if (!SHEETS_URL) {
+    alert('Configuracion pendiente: agrega la URL del Apps Script en SHEETS_URL.');
+    return;
+  }
+  const btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    const m = calcularMagnitud();
+    const body = new URLSearchParams({
+      email:           verifiedEmail || '',
+      nombre:          val('nombre'),
+      area:            val('area'),
+      sistema:         val('sistema'),
+      tipo:            radios.tipo || '',
+      urgencia:        radios.urgencia || '',
+      frecuencia:      radios.frecuencia || '',
+      problema:        val('problema'),
+      afectados:       val('afectados'),
+      solucion:        val('solucion'),
+      criterios:       val('criterios'),
+      observaciones:   val('observaciones'),
+      magnitud:        m.nivel,
+      magnitud_score:  m.score,
+      sistemas_dep:    val('sistemasDep'),
+      fecha_limite:    val('fechaLimite'),
+      usuarios_afect:  val('usuariosAfectados')
+    });
+    await fetch(SHEETS_URL, { method: 'POST', body, mode: 'no-cors' });
+
+    document.getElementById('step5').classList.add('hidden');
+    currentStep = 6;
+    document.getElementById('stepDone').classList.remove('hidden');
+    document.getElementById('progressBar').querySelectorAll('.progress-step').forEach(s => s.className = 'progress-step done');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = '✓ Enviar solicitud';
+    alert('Error al enviar: ' + e.message);
+  }
+}
+
+
+function resetForm() {
+  document.getElementById('stepDone').classList.add('hidden');
+  document.getElementById('step1').classList.remove('hidden');
+  currentStep = 1;
+  selectedBoard = null; selectedList = null;
+  radios.frecuencia = null; radios.tipo = null; radios.urgencia = null;
+  ['nombre','area','sistema','problema','afectados','solucion','criterios','observaciones']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('btnEnviar').disabled = false;
+  document.getElementById('btnEnviar').textContent = '✓ Enviar solicitud';
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
