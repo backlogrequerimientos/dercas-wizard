@@ -675,6 +675,7 @@ const SHEETS_URL = "https://script.google.com/macros/s/AKfycbymIJomAxkx-O0uGn1e8
 
 /* ── OTP / Login ── */
 let verifiedEmail = null;
+let otpState = null; // {email, code, ts, attempts}
 
 function maskEmail(email) {
   const [local, domain] = email.split('@');
@@ -757,80 +758,62 @@ async function sendOtp() {
   const btn = document.getElementById('btnSendOtp');
   btn.disabled    = true;
   btn.textContent = 'Enviando...';
+
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  otpState = { email, code, ts: Date.now(), attempts: 0 };
+
+  // Fire-and-forget con no-cors (evita bloqueo CORS)
   try {
-    const res  = await fetch(SHEETS_URL + '?action=sendOtp&email=' + encodeURIComponent(email));
-    const data = await res.json();
-    if (data.ok) {
-      document.getElementById('loginEmailMask').textContent = maskEmail(email);
-      document.getElementById('loginStepA').classList.add('hidden');
-      document.getElementById('loginStepB').classList.remove('hidden');
-      clearOtpBoxes();
-      setTimeout(() => document.getElementById('otp0').focus(), 100);
-    } else {
-      alert(data.msg || 'Error al enviar el código. Intenta de nuevo.');
-      btn.disabled    = false;
-      btn.textContent = 'Enviar código de verificación';
-    }
-  } catch (e) {
-    alert('Error: ' + e.message + '\n\nSi el Apps Script no fue actualizado, ese puede ser el motivo.');
-    btn.disabled    = false;
-    btn.textContent = 'Enviar código de verificación';
-  }
+    const body = new URLSearchParams({ action: 'sendOtp', email, code });
+    await fetch(SHEETS_URL, { method: 'POST', body, mode: 'no-cors' });
+  } catch (e) { /* no-cors ignora errores de red silenciosamente */ }
+
+  document.getElementById('loginEmailMask').textContent = maskEmail(email);
+  document.getElementById('loginStepA').classList.add('hidden');
+  document.getElementById('loginStepB').classList.remove('hidden');
+  clearOtpBoxes();
+  setTimeout(() => document.getElementById('otp0').focus(), 100);
 }
 
 async function resendOtp() {
-  showLoginStepA();
-  document.getElementById('loginStepA').classList.add('hidden');
-  document.getElementById('loginStepB').classList.remove('hidden');
   const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
-  const btn   = document.getElementById('btnSendOtp');
-  btn.disabled    = true;
-  btn.textContent = 'Reenviando...';
+  const code  = String(Math.floor(100000 + Math.random() * 900000));
+  otpState = { email, code, ts: Date.now(), attempts: 0 };
   try {
-    const res  = await fetch(SHEETS_URL + '?action=sendOtp&email=' + encodeURIComponent(email));
-    const data = await res.json();
-    if (data.ok) {
-      clearOtpBoxes();
-      document.getElementById('otpError').textContent = '';
-      setTimeout(() => document.getElementById('otp0').focus(), 100);
-    } else {
-      alert(data.msg || 'No se pudo reenviar el código.');
-    }
-    btn.disabled    = false;
-    btn.textContent = 'Enviar código de verificación';
-  } catch (e) {
-    alert('Error de conexión.');
-    btn.disabled    = false;
-    btn.textContent = 'Enviar código de verificación';
-  }
+    const body = new URLSearchParams({ action: 'sendOtp', email, code });
+    await fetch(SHEETS_URL, { method: 'POST', body, mode: 'no-cors' });
+  } catch (e) { /* ignorar */ }
+  clearOtpBoxes();
+  document.getElementById('otpError').textContent = '';
+  setTimeout(() => document.getElementById('otp0').focus(), 100);
 }
 
-async function verifyOtp() {
-  const email = (document.getElementById('loginEmail').value || '').trim().toLowerCase();
-  const code  = Array.from({length: 6}, (_, i) => document.getElementById('otp' + i).value).join('');
-  if (code.length < 6 || code.includes('')) {
-    showOtpError('Ingresa los 6 dígitos del código');
+function verifyOtp() {
+  if (!otpState) { showOtpError('Solicita un código primero'); return; }
+
+  const code = Array.from({length: 6}, (_, i) => document.getElementById('otp' + i).value).join('');
+  if (code.length < 6) { showOtpError('Ingresa los 6 dígitos del código'); return; }
+
+  if (Date.now() - otpState.ts > 600000) {
+    showOtpError('El código expiró. Solicita uno nuevo.');
+    otpState = null;
     return;
   }
-  const btn = document.getElementById('btnVerifyOtp');
-  btn.disabled    = true;
-  btn.textContent = 'Verificando...';
-  try {
-    const res  = await fetch(SHEETS_URL + '?action=verifyOtp&email=' + encodeURIComponent(email) + '&code=' + code);
-    const data = await res.json();
-    if (data.ok) {
-      verifiedEmail = email;
-      unlockWizard(email);
-    } else {
-      showOtpError(data.msg || 'Código incorrecto. Intenta de nuevo.');
-      btn.disabled    = false;
-      btn.textContent = 'Verificar';
-    }
-  } catch (e) {
-    showOtpError('Error de conexión. Intenta de nuevo.');
-    btn.disabled    = false;
-    btn.textContent = 'Verificar';
+  if (otpState.attempts >= 3) {
+    showOtpError('Demasiados intentos. Solicita un nuevo código.');
+    otpState = null;
+    return;
   }
+  if (code !== otpState.code) {
+    otpState.attempts++;
+    const left = 3 - otpState.attempts;
+    showOtpError('Código incorrecto. Te quedan ' + left + ' intento' + (left === 1 ? '' : 's') + '.');
+    return;
+  }
+
+  verifiedEmail = otpState.email;
+  otpState = null;
+  unlockWizard(verifiedEmail);
 }
 
 function unlockWizard(email) {
