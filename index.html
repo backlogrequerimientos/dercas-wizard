@@ -1269,13 +1269,20 @@ async function cargarTodas() {
     if (!document.getElementById('tabAnalisis').classList.contains('hidden')) renderAnalisis(todasItems);
   } catch(e) {
     try {
-      const data = await fetchJsonp(url);
+      const data = await Promise.race([
+        fetchJsonp(url),
+        new Promise((_,r) => setTimeout(() => r(new Error('Timeout 10s')), 10000))
+      ]);
       todasItems = data.items || [];
       poblarFiltros(todasItems);
       renderAdminTabla(todasItems);
+      document.getElementById('adminStatsLabel').textContent =
+        todasItems.length + ' solicitudes · ' + new Set(todasItems.map(r => r.area).filter(Boolean)).size + ' áreas';
     } catch(e2) {
       document.getElementById('adminTablaContainer').innerHTML =
-        '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar.</p></div>';
+        '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar.</p>' +
+        '<p style="font-size:11px;color:var(--muted);margin-top:8px">Error: ' + e.message + ' / ' + e2.message + '</p>' +
+        '<p style="font-size:11px;color:var(--muted)">Verifica que el Apps Script fue actualizado y redesployado.</p></div>';
     }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar'; }
