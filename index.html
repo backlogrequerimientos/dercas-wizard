@@ -345,6 +345,61 @@
     padding: 0 24px 64px;
   }
 
+  /* ── Admin panel ── */
+  #panelAdmin { width: 100%; }
+  #panelAdmin .card { max-width: 100%; }
+  .admin-tabs {
+    display: flex; gap: 4px; margin-bottom: 20px;
+    border-bottom: 2px solid var(--border); padding-bottom: 0;
+  }
+  .admin-tab {
+    padding: 8px 20px; font-size: 13px; font-weight: 600;
+    border: none; background: none; cursor: pointer;
+    color: var(--muted); border-bottom: 3px solid transparent;
+    margin-bottom: -2px; transition: color .2s;
+  }
+  .admin-tab.activo { color: var(--blue); border-bottom-color: var(--blue); }
+  .admin-filtros {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px;
+  }
+  .admin-filtros select {
+    padding: 7px 12px; border: 2px solid var(--border);
+    border-radius: var(--radius); font-size: 13px; color: var(--text);
+    background: #fff; outline: none; cursor: pointer;
+  }
+  .admin-filtros select:focus { border-color: var(--blue); }
+  .metric-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px; margin-bottom: 28px;
+  }
+  .metric-card {
+    background: var(--blue-lt); border-radius: var(--radius);
+    padding: 18px 20px; text-align: center;
+  }
+  .metric-card.warn { background: #FFF7D6; }
+  .metric-card.danger { background: #FFEBE6; }
+  .metric-card.ok { background: #E3FCEF; }
+  .metric-num { font-size: 36px; font-weight: 800; color: var(--blue); line-height: 1; }
+  .metric-card.warn .metric-num { color: #974F0C; }
+  .metric-card.danger .metric-num { color: var(--red); }
+  .metric-card.ok .metric-num { color: #006644; }
+  .metric-label { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 600; }
+  .insight-list { list-style: none; padding: 0; }
+  .insight-list li {
+    padding: 10px 14px; margin-bottom: 8px;
+    border-left: 4px solid var(--blue); background: var(--blue-lt);
+    border-radius: 0 var(--radius) var(--radius) 0; font-size: 13px; line-height: 1.5;
+  }
+  .insight-list li.warn { border-color: var(--yellow); background: #FFF7D6; }
+  .insight-list li.danger { border-color: var(--red); background: #FFEBE6; }
+  .insight-list li.ok { border-color: var(--green); background: #E3FCEF; }
+  .area-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 13px; }
+  .area-bar-row .area-name { width: 180px; flex-shrink: 0; font-weight: 600; }
+  .area-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 18px; overflow: hidden; }
+  .area-bar-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width .4s; }
+  .area-bar-fill.pend { background: var(--yellow); }
+  .area-bar-num { width: 30px; text-align: right; color: var(--muted); font-size: 12px; }
+
   /* ── Barra de usuario ── */
   .user-bar {
     width: 100%;
@@ -467,6 +522,7 @@
 <div class="user-bar">
   <div class="user-email">Sesión: <strong id="userBarEmail"></strong></div>
   <button class="ub-btn ub-mis" id="btnMisSolicitudes" onclick="verMisSolicitudes()">&#9776; Mis solicitudes</button>
+  <button class="ub-btn ub-mis" id="btnPanelAdmin" onclick="verPanelAdmin()" style="display:none;background:rgba(255,255,255,.28)">&#9881; Admin</button>
   <button class="ub-btn ub-salir" onclick="cerrarSesion()">&#x2192; Salir</button>
 </div>
 
@@ -737,6 +793,44 @@
   </div>
 </div>
 
+<!-- Panel Admin -->
+<div id="panelAdmin" class="hidden">
+  <div class="card">
+    <div class="panel-header">
+      <div>
+        <h2>Panel de Administración</h2>
+        <div class="sub" id="adminStatsLabel">Cargando...</div>
+      </div>
+      <button class="btn btn-secondary" style="margin-left:auto;font-size:12px" onclick="volverDesdeAdmin()">← Volver</button>
+      <button class="btn btn-secondary" style="font-size:12px" id="btnRefreshAdmin" onclick="cargarTodas()">↻ Actualizar</button>
+    </div>
+    <div class="admin-tabs">
+      <button class="admin-tab activo" id="tab-btn-solicitudes" onclick="switchAdminTab('solicitudes')">Solicitudes</button>
+      <button class="admin-tab" id="tab-btn-analisis" onclick="switchAdminTab('analisis')">Análisis IA</button>
+    </div>
+    <div id="tabSolicitudes">
+      <div class="admin-filtros">
+        <select id="filtroArea" onchange="filtrarAdmin()"><option value="">Todas las áreas</option></select>
+        <select id="filtroEstado" onchange="filtrarAdmin()">
+          <option value="">Todos los estados</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="ASIGNADO">Asignado</option>
+        </select>
+        <select id="filtroUrgencia" onchange="filtrarAdmin()">
+          <option value="">Todas las urgencias</option>
+          <option value="alta">Alta</option>
+          <option value="media">Media</option>
+          <option value="baja">Baja</option>
+        </select>
+      </div>
+      <div id="adminTablaContainer"><div class="req-empty"><div class="icon">⏳</div><p>Cargando...</p></div></div>
+    </div>
+    <div id="tabAnalisis" class="hidden">
+      <div id="adminAnalisisContainer"><div class="req-empty"><div class="icon">⏳</div><p>Cargando...</p></div></div>
+    </div>
+  </div>
+</div>
+
 <!-- Panel mis solicitudes -->
 <div id="panelSolicitudes" class="hidden">
   <div class="card">
@@ -915,6 +1009,7 @@ function unlockWizard(email) {
   document.getElementById('panelEmailLabel').textContent = email;
   const campoNombre = document.getElementById('nombre');
   if (campoNombre && !campoNombre.value) campoNombre.value = nombreDesdeEmail(email);
+  document.getElementById('btnPanelAdmin').style.display = (email === ADMIN_EMAIL) ? 'inline-block' : 'none';
   const ww = document.getElementById('wizardWrapper');
   ww.style.alignItems = 'center';
   ww.classList.remove('hidden');
@@ -1112,6 +1207,199 @@ async function submitCard() {
 }
 
 
+/* ── Roles ── */
+const ADMIN_EMAIL = 'jonathan.vargas@veris.com.ec';
+function isAdmin() { return verifiedEmail === ADMIN_EMAIL; }
+
+/* ── Panel Admin ── */
+let todasItems = [];
+
+function verPanelAdmin() {
+  ocultarWizardActual();
+  document.getElementById('panelAdmin').classList.remove('hidden');
+  document.getElementById('panelSolicitudes').classList.add('hidden');
+  document.getElementById('btnPanelAdmin').classList.add('activo');
+  document.getElementById('btnMisSolicitudes').classList.remove('activo');
+  document.getElementById('wizardWrapper').style.alignItems = 'stretch';
+  cargarTodas();
+}
+
+function volverDesdeAdmin() {
+  document.getElementById('panelAdmin').classList.add('hidden');
+  document.getElementById('btnPanelAdmin').classList.remove('activo');
+  document.getElementById('wizardWrapper').style.alignItems = 'center';
+  mostrarPasoActual();
+}
+
+function ocultarWizardActual() {
+  document.getElementById('step' + currentStep)?.classList.add('hidden');
+  document.getElementById('stepDone')?.classList.add('hidden');
+  document.getElementById('progressBar').classList.add('hidden');
+}
+
+function mostrarPasoActual() {
+  document.getElementById('progressBar').classList.remove('hidden');
+  document.getElementById('step' + currentStep).classList.remove('hidden');
+}
+
+function switchAdminTab(tab) {
+  ['solicitudes','analisis'].forEach(t => {
+    const tabEl  = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    const btnEl  = document.getElementById('tab-btn-' + t);
+    if (tabEl) tabEl.classList.toggle('hidden', t !== tab);
+    if (btnEl) btnEl.classList.toggle('activo', t === tab);
+  });
+  if (tab === 'analisis' && todasItems.length) renderAnalisis(todasItems);
+}
+
+async function cargarTodas() {
+  const btn = document.getElementById('btnRefreshAdmin');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
+  document.getElementById('adminTablaContainer').innerHTML =
+    '<div class="req-empty"><div class="icon">⏳</div><p>Cargando solicitudes...</p></div>';
+  const url = SHEETS_URL + '?action=todasSolicitudes&adminEmail=' + encodeURIComponent(verifiedEmail || '');
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    todasItems = data.items || [];
+    poblarFiltros(todasItems);
+    renderAdminTabla(todasItems);
+    document.getElementById('adminStatsLabel').textContent =
+      todasItems.length + ' solicitudes · ' + new Set(todasItems.map(r => r.area).filter(Boolean)).size + ' áreas';
+    if (!document.getElementById('tabAnalisis').classList.contains('hidden')) renderAnalisis(todasItems);
+  } catch(e) {
+    try {
+      const data = await fetchJsonp(url);
+      todasItems = data.items || [];
+      poblarFiltros(todasItems);
+      renderAdminTabla(todasItems);
+    } catch(e2) {
+      document.getElementById('adminTablaContainer').innerHTML =
+        '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar.</p></div>';
+    }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar'; }
+  }
+}
+
+function poblarFiltros(items) {
+  const areas = [...new Set(items.map(r => r.area).filter(Boolean))].sort();
+  const sel   = document.getElementById('filtroArea');
+  const cur   = sel.value;
+  sel.innerHTML = '<option value="">Todas las áreas</option>' +
+    areas.map(a => `<option value="${esc(a)}">${esc(a)}</option>`).join('');
+  sel.value = cur;
+}
+
+function filtrarAdmin() {
+  const area     = document.getElementById('filtroArea').value;
+  const estado   = document.getElementById('filtroEstado').value;
+  const urgencia = document.getElementById('filtroUrgencia').value;
+  const filtered = todasItems.filter(r =>
+    (!area     || r.area     === area) &&
+    (!estado   || r.estado   === estado) &&
+    (!urgencia || r.urgencia === urgencia)
+  );
+  renderAdminTabla(filtered);
+}
+
+function renderAdminTabla(items) {
+  if (!items.length) {
+    document.getElementById('adminTablaContainer').innerHTML =
+      '<div class="req-empty"><div class="icon">📭</div><p>No hay solicitudes con estos filtros.</p></div>';
+    return;
+  }
+  const tipoMap = { bug:'Error/Bug', mejora:'Mejora', nuevo:'Nuevo' };
+  const rows = items.map(r => {
+    const estadoBadge = `<span class="badge-estado badge-${r.estado}">${r.estado}</span>`;
+    const magBadge    = r.magnitud ? `<span class="badge-estado badge-magnitud-${r.magnitud}">${r.magnitud}</span>` : '';
+    const urgColor    = r.urgencia==='alta' ? 'var(--red)' : r.urgencia==='media' ? 'var(--yellow)' : 'var(--green)';
+    const trello      = r.url
+      ? `<a class="trello-link" href="${r.url}" target="_blank">${r.tablero||'Ver'}</a>`
+      : (r.tablero || '<span style="color:var(--muted)">Pendiente</span>');
+    return `<tr>
+      <td>${r.fecha}</td>
+      <td><strong>${esc(r.nombre||'')}</strong><br><span style="font-size:11px;color:var(--muted)">${esc(r.area||'')}</span></td>
+      <td>${estadoBadge} ${magBadge}</td>
+      <td>${esc(r.sistema)}</td>
+      <td>${esc(tipoMap[r.tipo]||r.tipo)}</td>
+      <td><strong style="color:${urgColor}">${(r.urgencia||'').toUpperCase()}</strong></td>
+      <td style="max-width:260px">${esc(r.problema)}</td>
+      <td>${trello}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('adminTablaContainer').innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="req-table">
+        <thead><tr>
+          <th>Fecha</th><th>Solicitante / Área</th><th>Estado</th>
+          <th>Sistema</th><th>Tipo</th><th>Urgencia</th><th>Descripción</th><th>Tablero</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px;text-align:right">${items.length} resultado${items.length===1?'':'s'}</p>`;
+}
+
+function renderAnalisis(items) {
+  if (!items.length) {
+    document.getElementById('adminAnalisisContainer').innerHTML =
+      '<div class="req-empty"><div class="icon">📊</div><p>Sin datos suficientes para analizar.</p></div>';
+    return;
+  }
+  const total      = items.length;
+  const pendientes = items.filter(r => r.estado === 'PENDIENTE').length;
+  const asignados  = items.filter(r => r.estado === 'ASIGNADO').length;
+  const altasUrg   = items.filter(r => r.urgencia === 'alta' && r.estado === 'PENDIENTE').length;
+  const byArea     = {};
+  items.forEach(r => {
+    const a = r.area || 'Sin área';
+    if (!byArea[a]) byArea[a] = { total:0, pend:0, asig:0, alta:0 };
+    byArea[a].total++;
+    if (r.estado==='PENDIENTE') byArea[a].pend++;
+    if (r.estado==='ASIGNADO')  byArea[a].asig++;
+    if (r.urgencia==='alta')    byArea[a].alta++;
+  });
+  const areasSorted = Object.entries(byArea).sort((a,b) => b[1].total - a[1].total);
+  const maxTotal    = areasSorted[0]?.[1].total || 1;
+  const insights    = [];
+  const topArea     = areasSorted[0];
+  if (topArea) insights.push({ tipo:'info', txt: `<strong>${topArea[0]}</strong> es el área más activa con <strong>${topArea[1].total}</strong> solicitud${topArea[1].total===1?'':'es'}.` });
+  if (altasUrg > 0) insights.push({ tipo:'danger', txt: `⚠️ Hay <strong>${altasUrg}</strong> solicitud${altasUrg===1?' de':'es de'} urgencia <strong>ALTA</strong> sin asignar — requieren atención inmediata.` });
+  const conPend = areasSorted.filter(([,v]) => v.pend > 0).sort((a,b) => b[1].pend - a[1].pend);
+  if (conPend.length) insights.push({ tipo:'warn', txt: `Áreas con más backlog: <strong>${conPend.slice(0,3).map(([k,v])=>k+' ('+v.pend+')').join(', ')}</strong>.` });
+  const pct  = total > 0 ? Math.round(asignados/total*100) : 0;
+  insights.push({ tipo: pct>=70?'ok':pct>=40?'warn':'danger', txt: `Tasa de asignación: <strong>${pct}%</strong> (${asignados} de ${total} asignadas).` });
+  const sinArea = items.filter(r => !r.area).length;
+  if (sinArea > 0) insights.push({ tipo:'warn', txt: `${sinArea} solicitud${sinArea===1?' fue ingresada':'es fueron ingresadas'} sin área definida.` });
+
+  document.getElementById('adminAnalisisContainer').innerHTML = `
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-num">${total}</div><div class="metric-label">Total solicitudes</div></div>
+      <div class="metric-card warn"><div class="metric-num">${pendientes}</div><div class="metric-label">Pendientes de asignar</div></div>
+      <div class="metric-card ok"><div class="metric-num">${asignados}</div><div class="metric-label">Asignadas</div></div>
+      <div class="metric-card ${altasUrg>0?'danger':'ok'}"><div class="metric-num">${altasUrg}</div><div class="metric-label">Alta urgencia sin asignar</div></div>
+    </div>
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Actividad por área</h3>
+    <div style="margin-bottom:28px">
+      ${areasSorted.map(([area,v]) => `
+        <div class="area-bar-row">
+          <div class="area-name">${esc(area)}</div>
+          <div style="flex:1">
+            <div class="area-bar-wrap"><div class="area-bar-fill" style="width:${Math.round(v.total/maxTotal*100)}%"></div></div>
+            <div style="display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:3px">
+              <span>Total: <strong>${v.total}</strong></span>
+              <span style="color:#974F0C">Pendiente: <strong>${v.pend}</strong></span>
+              <span style="color:#006644">Asignado: <strong>${v.asig}</strong></span>
+              ${v.alta?`<span style="color:var(--red)">Alta: <strong>${v.alta}</strong></span>`:''}
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <h3 style="font-size:15px;font-weight:700;margin-bottom:14px">Insights automáticos</h3>
+    <ul class="insight-list">${insights.map(i=>`<li class="${i.tipo}">${i.txt}</li>`).join('')}</ul>`;
+}
+
 /* ── Mis solicitudes ── */
 function fetchJsonp(url) {
   return new Promise((resolve, reject) => {
@@ -1125,9 +1413,8 @@ function fetchJsonp(url) {
 }
 
 function verMisSolicitudes() {
-  const wizard = document.getElementById('step' + currentStep);
-  if (wizard) wizard.classList.add('hidden');
-  document.getElementById('progressBar').classList.add('hidden');
+  ocultarWizardActual();
+  document.getElementById('panelAdmin').classList.add('hidden');
   document.getElementById('panelSolicitudes').classList.remove('hidden');
   document.getElementById('panelEmailLabel').textContent = verifiedEmail || '';
   document.getElementById('wizardWrapper').style.alignItems = 'stretch';
@@ -1137,10 +1424,9 @@ function verMisSolicitudes() {
 
 function volverAlFormulario() {
   document.getElementById('panelSolicitudes').classList.add('hidden');
-  document.getElementById('progressBar').classList.remove('hidden');
-  document.getElementById('step' + currentStep).classList.remove('hidden');
   document.getElementById('wizardWrapper').style.alignItems = 'center';
   document.getElementById('btnMisSolicitudes').classList.remove('activo');
+  mostrarPasoActual();
 }
 
 async function cargarMisSolicitudes() {
