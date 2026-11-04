@@ -916,6 +916,7 @@ function unlockWizard(email) {
   const campoNombre = document.getElementById('nombre');
   if (campoNombre && !campoNombre.value) campoNombre.value = nombreDesdeEmail(email);
   const ww = document.getElementById('wizardWrapper');
+  ww.style.alignItems = 'center';
   ww.classList.remove('hidden');
   ww.style.display = 'flex';
   window.scrollTo({ top: 0 });
