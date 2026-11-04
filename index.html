@@ -1106,13 +1106,21 @@ async function cargarMisSolicitudes() {
   if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
   document.getElementById('tablaContainer').innerHTML =
     '<div class="req-empty"><div class="icon">⏳</div><p>Cargando solicitudes...</p></div>';
+  const url = SHEETS_URL + '?action=misSolicitudes&email=' + encodeURIComponent(verifiedEmail || '');
   try {
-    const url  = SHEETS_URL + '?action=misSolicitudes&email=' + encodeURIComponent(verifiedEmail || '');
-    const data = await fetchJsonp(url);
+    // Intentar fetch normal (CORS)
+    const res  = await fetch(url);
+    const data = await res.json();
     renderTabla(data.items || []);
-  } catch (e) {
-    document.getElementById('tablaContainer').innerHTML =
-      '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar. Intenta de nuevo.</p></div>';
+  } catch (fetchErr) {
+    // Fallback: JSONP
+    try {
+      const data = await fetchJsonp(url);
+      renderTabla(data.items || []);
+    } catch (e) {
+      document.getElementById('tablaContainer').innerHTML =
+        '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar. Intenta de nuevo.</p><p style="font-size:11px;color:var(--muted);margin-top:8px">' + e.message + '</p></div>';
+    }
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar'; }
   }
