@@ -772,7 +772,7 @@ async function sendOtp() {
       btn.textContent = 'Enviar código de verificación';
     }
   } catch (e) {
-    alert('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    alert('Error: ' + e.message + '\n\nSi el Apps Script no fue actualizado, ese puede ser el motivo.');
     btn.disabled    = false;
     btn.textContent = 'Enviar código de verificación';
   }
