@@ -902,10 +902,19 @@ function verifyOtp() {
   unlockWizard(verifiedEmail);
 }
 
+function nombreDesdeEmail(email) {
+  const local = email.split('@')[0];
+  return local.split('.')
+    .map(p => p.charAt(0).toUpperCase() + p.slice(1))
+    .join(' ');
+}
+
 function unlockWizard(email) {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('userBarEmail').textContent = email;
   document.getElementById('panelEmailLabel').textContent = email;
+  const campoNombre = document.getElementById('nombre');
+  if (campoNombre && !campoNombre.value) campoNombre.value = nombreDesdeEmail(email);
   const ww = document.getElementById('wizardWrapper');
   ww.classList.remove('hidden');
   ww.style.display = 'flex';
