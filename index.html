@@ -344,6 +344,47 @@
     width: 100%; display: flex; flex-direction: column; align-items: center;
     padding: 0 16px 64px;
   }
+
+  /* ── Mis solicitudes ── */
+  #btnMisSolicitudes {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 12px; padding: 6px 14px;
+    background: var(--blue-lt); color: var(--blue);
+    border: 2px solid var(--blue); border-radius: var(--radius);
+    cursor: pointer; font-weight: 600; transition: background .2s;
+  }
+  #btnMisSolicitudes:hover { background: #d0e4ff; }
+  #panelSolicitudes {
+    width: 100%; max-width: 860px;
+  }
+  .panel-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .panel-header h2 { font-size: 18px; font-weight: 700; }
+  .panel-header .sub { font-size: 13px; color: var(--muted); }
+  .req-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .req-table th {
+    text-align: left; padding: 10px 12px;
+    background: var(--blue); color: #fff;
+    font-weight: 600; font-size: 12px;
+  }
+  .req-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .req-table tr:last-child td { border-bottom: none; }
+  .req-table tr:hover td { background: var(--blue-lt); }
+  .badge-estado {
+    display: inline-block; padding: 3px 8px; border-radius: 20px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  }
+  .badge-PENDIENTE  { background: #FFF7D6; color: #974F0C; }
+  .badge-ASIGNADO   { background: #E9F2FF; color: #0052CC; }
+  .badge-magnitud-menor { background: #E3FCEF; color: #006644; }
+  .badge-magnitud-medio { background: #FFF7D6; color: #974F0C; }
+  .badge-magnitud-mayor { background: #FFEBE6; color: #DE350B; }
+  .req-empty { text-align: center; padding: 48px 0; color: var(--muted); }
+  .req-empty .icon { font-size: 36px; margin-bottom: 12px; }
+  .trello-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+  .trello-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -399,6 +440,7 @@
     <h1>Solicitud de Cambio</h1>
     <p>Completa el formulario para registrar tu requerimiento</p>
   </div>
+  <button id="btnMisSolicitudes" onclick="verMisSolicitudes()">Mis solicitudes</button>
 </div>
 
 <div class="progress-bar" id="progressBar">
@@ -666,6 +708,23 @@
     <p>Tu requerimiento fue registrado. El gestor lo revisara y lo asignara al equipo tecnico.<br>Te avisaran cuando este en proceso.</p>
     <button class="btn btn-secondary" onclick="resetForm()" style="margin-top:16px">Nueva solicitud</button>
     <button class="btn btn-secondary" onclick="cerrarSesion()" style="margin-top:8px;background:#fff;color:var(--muted);border:2px solid var(--border)">Cerrar y salir</button>
+  </div>
+</div>
+
+<!-- Panel mis solicitudes -->
+<div id="panelSolicitudes" class="hidden">
+  <div class="card">
+    <div class="panel-header">
+      <div>
+        <h2>Mis solicitudes</h2>
+        <div class="sub" id="panelEmailLabel"></div>
+      </div>
+      <button class="btn btn-secondary" style="margin-left:auto;font-size:12px" onclick="volverAlFormulario()">← Volver</button>
+      <button class="btn btn-secondary" style="font-size:12px" onclick="cargarMisSolicitudes()" id="btnRefresh">↻ Actualizar</button>
+    </div>
+    <div id="tablaContainer">
+      <div class="req-empty"><div class="icon">📋</div><p>Cargando...</p></div>
+    </div>
   </div>
 </div>
 
@@ -1015,10 +1074,94 @@ async function submitCard() {
 }
 
 
+/* ── Mis solicitudes ── */
+function fetchJsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = '_cb_' + Math.random().toString(36).slice(2);
+    window[cb] = data => { delete window[cb]; script.remove(); resolve(data); };
+    const script = document.createElement('script');
+    script.src = url + '&callback=' + cb;
+    script.onerror = () => { delete window[cb]; script.remove(); reject(new Error('Error de red')); };
+    document.head.appendChild(script);
+  });
+}
+
+function verMisSolicitudes() {
+  const wizard = document.getElementById('step' + currentStep);
+  if (wizard) wizard.classList.add('hidden');
+  document.getElementById('progressBar').classList.add('hidden');
+  document.getElementById('panelSolicitudes').classList.remove('hidden');
+  document.getElementById('panelEmailLabel').textContent = verifiedEmail || '';
+  cargarMisSolicitudes();
+}
+
+function volverAlFormulario() {
+  document.getElementById('panelSolicitudes').classList.add('hidden');
+  document.getElementById('progressBar').classList.remove('hidden');
+  document.getElementById('step' + currentStep).classList.remove('hidden');
+}
+
+async function cargarMisSolicitudes() {
+  const btn = document.getElementById('btnRefresh');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cargando...'; }
+  document.getElementById('tablaContainer').innerHTML =
+    '<div class="req-empty"><div class="icon">⏳</div><p>Cargando solicitudes...</p></div>';
+  try {
+    const url  = SHEETS_URL + '?action=misSolicitudes&email=' + encodeURIComponent(verifiedEmail || '');
+    const data = await fetchJsonp(url);
+    renderTabla(data.items || []);
+  } catch (e) {
+    document.getElementById('tablaContainer').innerHTML =
+      '<div class="req-empty"><div class="icon">⚠️</div><p>No se pudo cargar. Intenta de nuevo.</p></div>';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '↻ Actualizar'; }
+  }
+}
+
+function renderTabla(items) {
+  if (!items.length) {
+    document.getElementById('tablaContainer').innerHTML =
+      '<div class="req-empty"><div class="icon">📭</div><p>No tienes solicitudes registradas aún.</p></div>';
+    return;
+  }
+  const tipoMap = { bug: 'Error/Bug', mejora: 'Mejora', nuevo: 'Nuevo' };
+  const rows = items.map(r => {
+    const estadoBadge = `<span class="badge-estado badge-${r.estado}">${r.estado}</span>`;
+    const magBadge    = r.magnitud
+      ? `<span class="badge-estado badge-magnitud-${r.magnitud}">${r.magnitud}</span>`
+      : '';
+    const trelloCell  = r.url
+      ? `<a class="trello-link" href="${r.url}" target="_blank">${r.tablero || 'Ver'}</a>`
+      : (r.tablero || '<span style="color:var(--muted)">Pendiente</span>');
+    return `<tr>
+      <td>${r.fecha}</td>
+      <td>${estadoBadge} ${magBadge}</td>
+      <td>${esc(r.sistema)}</td>
+      <td>${esc(tipoMap[r.tipo] || r.tipo)}</td>
+      <td>${esc(r.urgencia)}</td>
+      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(r.problema)}</td>
+      <td>${trelloCell}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('tablaContainer').innerHTML = `
+    <div style="overflow-x:auto">
+      <table class="req-table">
+        <thead><tr>
+          <th>Fecha</th><th>Estado</th><th>Sistema</th><th>Tipo</th>
+          <th>Urgencia</th><th>Descripción</th><th>Tablero / Trello</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px;text-align:right">${items.length} solicitud${items.length===1?'':'es'}</p>`;
+}
+
 function cerrarSesion() {
   verifiedEmail = null;
   otpState = null;
   resetForm();
+  document.getElementById('panelSolicitudes').classList.add('hidden');
+  document.getElementById('progressBar').classList.remove('hidden');
   document.getElementById('wizardWrapper').classList.add('hidden');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
