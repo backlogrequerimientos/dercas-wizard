@@ -1202,7 +1202,10 @@ function cerrarSesion() {
   resetForm();
   document.getElementById('panelSolicitudes').classList.add('hidden');
   document.getElementById('progressBar').classList.remove('hidden');
-  document.getElementById('wizardWrapper').classList.add('hidden');
+  document.getElementById('btnMisSolicitudes').classList.remove('activo');
+  const ww = document.getElementById('wizardWrapper');
+  ww.style.alignItems = 'center';
+  ww.classList.add('hidden');
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginEmail').value = '';
   showLoginStepA();
