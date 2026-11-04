@@ -1237,7 +1237,7 @@ async function submitCard() {
 
   try {
     const m = calcularMagnitud();
-    const body = new URLSearchParams({
+    const payload = JSON.stringify({
       email:           verifiedEmail || '',
       nombre:          val('nombre'),
       area:            val('area'),
@@ -1259,7 +1259,12 @@ async function submitCard() {
       archivo_nombre:  archivoNombre,
       archivo_mime:    archivoMime
     });
-    await fetch(SHEETS_URL, { method: 'POST', body, mode: 'no-cors' });
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      body: payload,
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' }
+    });
 
     document.getElementById('step5').classList.add('hidden');
     currentStep = 6;
