@@ -345,6 +345,16 @@
     padding: 0 24px 64px;
   }
 
+  /* ── Adjunto ── */
+  .file-drop {
+    border: 2px dashed var(--border); border-radius: var(--radius);
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: border-color .2s, background .2s;
+  }
+  .file-drop:hover { border-color: var(--blue); background: var(--blue-lt); }
+  .file-drop.has-file { border-color: var(--green); background: #E3FCEF; border-style: solid; }
+  .file-preview-img { max-width: 100%; max-height: 180px; border-radius: var(--radius); margin-top: 10px; display: block; }
+
   /* ── Admin panel ── */
   #panelAdmin { width: 100%; }
   #panelAdmin .card { max-width: 100%; }
@@ -631,6 +641,25 @@
     <div class="hint">Usuarios, pacientes, procesos o areas que se ven impactados.</div>
     <input type="text" id="afectados" placeholder="Ej. Personal de caja y facturacion de todas las sucursales">
     <div class="err-msg">Indica a quienes afecta</div>
+  </div>
+
+  <div class="field">
+    <label>Adjunto (opcional)</label>
+    <div class="hint">Adjunta una imagen o PDF de soporte — máx. 3 MB.</div>
+    <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()"
+         ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+         ondragleave="this.style.borderColor=''"
+         ondrop="event.preventDefault();handleFileSelect(event.dataTransfer.files[0])">
+      <div id="fileDropLabel">📎 Haz clic o arrastra aquí tu archivo</div>
+      <input type="file" id="fileInput" accept="image/*,.pdf" style="display:none"
+             onchange="handleFileSelect(this.files[0])">
+      <div id="filePreviewWrap" style="display:none;margin-top:10px">
+        <img id="filePreviewImg" class="file-preview-img" style="display:none">
+        <div id="fileNameLabel" style="font-size:13px;color:var(--text);margin-top:6px"></div>
+        <button class="btn btn-secondary" onclick="event.stopPropagation();quitarArchivo()"
+                style="margin-top:8px;padding:4px 12px;font-size:12px">✕ Quitar archivo</button>
+      </div>
+    </div>
   </div>
 
   <div class="nav">
@@ -1162,6 +1191,41 @@ function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+/* ── Adjunto ── */
+let archivoBase64 = '', archivoNombre = '', archivoMime = '';
+
+function handleFileSelect(file) {
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('El archivo supera los 3 MB. Elige uno más pequeño.'); return; }
+  archivoNombre = file.name;
+  archivoMime   = file.type;
+  const reader  = new FileReader();
+  reader.onload = e => {
+    archivoBase64 = e.target.result.split(',')[1];
+    const drop = document.getElementById('fileDrop');
+    drop.classList.add('has-file');
+    document.getElementById('fileDropLabel').textContent = '✅ Archivo seleccionado';
+    const wrap = document.getElementById('filePreviewWrap');
+    wrap.style.display = 'block';
+    document.getElementById('fileNameLabel').textContent = file.name;
+    const img = document.getElementById('filePreviewImg');
+    if (file.type.startsWith('image/')) { img.src = e.target.result; img.style.display = 'block'; }
+    else img.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function quitarArchivo() {
+  archivoBase64 = ''; archivoNombre = ''; archivoMime = '';
+  document.getElementById('fileInput').value = '';
+  const drop = document.getElementById('fileDrop');
+  drop.classList.remove('has-file');
+  document.getElementById('fileDropLabel').textContent = '📎 Haz clic o arrastra aquí tu archivo';
+  document.getElementById('filePreviewWrap').style.display = 'none';
+  document.getElementById('filePreviewImg').style.display = 'none';
+  document.getElementById('filePreviewImg').src = '';
+}
+
 async function submitCard() {
   if (!SHEETS_URL) {
     alert('Configuracion pendiente: agrega la URL del Apps Script en SHEETS_URL.');
@@ -1190,7 +1254,10 @@ async function submitCard() {
       magnitud_score:  m.score,
       sistemas_dep:    val('sistemasDep'),
       fecha_limite:    val('fechaLimite'),
-      usuarios_afect:  val('usuariosAfectados')
+      usuarios_afect:  val('usuariosAfectados'),
+      archivo_base64:  archivoBase64,
+      archivo_nombre:  archivoNombre,
+      archivo_mime:    archivoMime
     });
     await fetch(SHEETS_URL, { method: 'POST', body, mode: 'no-cors' });
 
@@ -1324,6 +1391,9 @@ function renderAdminTabla(items) {
     const trello      = r.url
       ? `<a class="trello-link" href="${r.url}" target="_blank">${r.tablero||'Ver'}</a>`
       : (r.tablero || '<span style="color:var(--muted)">Pendiente</span>');
+    const archivoAdm  = r.archivo
+      ? `<a href="${r.archivo}" target="_blank" style="font-size:12px">📎 Ver</a>`
+      : '<span style="color:var(--muted)">—</span>';
     return `<tr>
       <td>${r.fecha}</td>
       <td><strong>${esc(r.nombre||'')}</strong><br><span style="font-size:11px;color:var(--muted)">${esc(r.area||'')}</span></td>
@@ -1331,8 +1401,9 @@ function renderAdminTabla(items) {
       <td>${esc(r.sistema)}</td>
       <td>${esc(tipoMap[r.tipo]||r.tipo)}</td>
       <td><strong style="color:${urgColor}">${(r.urgencia||'').toUpperCase()}</strong></td>
-      <td style="max-width:260px">${esc(r.problema)}</td>
+      <td style="max-width:220px">${esc(r.problema)}</td>
       <td>${trello}</td>
+      <td>${archivoAdm}</td>
     </tr>`;
   }).join('');
   document.getElementById('adminTablaContainer').innerHTML = `
@@ -1340,7 +1411,7 @@ function renderAdminTabla(items) {
       <table class="req-table">
         <thead><tr>
           <th>Fecha</th><th>Solicitante / Área</th><th>Estado</th>
-          <th>Sistema</th><th>Tipo</th><th>Urgencia</th><th>Descripción</th><th>Tablero</th>
+          <th>Sistema</th><th>Tipo</th><th>Urgencia</th><th>Descripción</th><th>Tablero</th><th>Adjunto</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1476,14 +1547,18 @@ function renderTabla(items) {
     const trelloCell  = r.url
       ? `<a class="trello-link" href="${r.url}" target="_blank">${r.tablero || 'Ver'}</a>`
       : (r.tablero || '<span style="color:var(--muted)">Pendiente</span>');
+    const archivoCell = r.archivo
+      ? `<a href="${r.archivo}" target="_blank" style="font-size:12px">📎 Ver</a>`
+      : '<span style="color:var(--muted)">—</span>';
     return `<tr>
       <td>${r.fecha}</td>
       <td>${estadoBadge} ${magBadge}</td>
       <td>${esc(r.sistema)}</td>
       <td>${esc(tipoMap[r.tipo] || r.tipo)}</td>
       <td>${esc(r.urgencia)}</td>
-      <td style="max-width:360px">${esc(r.problema)}</td>
+      <td style="max-width:300px">${esc(r.problema)}</td>
       <td>${trelloCell}</td>
+      <td>${archivoCell}</td>
     </tr>`;
   }).join('');
   document.getElementById('tablaContainer').innerHTML = `
@@ -1491,7 +1566,7 @@ function renderTabla(items) {
       <table class="req-table">
         <thead><tr>
           <th>Fecha</th><th>Estado</th><th>Sistema</th><th>Tipo</th>
-          <th>Urgencia</th><th>Descripción</th><th>Tablero / Trello</th>
+          <th>Urgencia</th><th>Descripción</th><th>Tablero / Trello</th><th>Adjunto</th>
         </tr></thead>
         <tbody>${rows}</tbody>
       </table>
@@ -1524,6 +1599,7 @@ function resetForm() {
   ['nombre','area','sistema','problema','afectados','solucion','criterios','observaciones']
     .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   document.querySelectorAll('.radio-option').forEach(o => o.classList.remove('selected'));
+  quitarArchivo();
   document.getElementById('btnEnviar').disabled = false;
   document.getElementById('btnEnviar').textContent = '✓ Enviar solicitud';
   updateProgress();
